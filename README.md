@@ -1,3 +1,5 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/72880fd2c1dc4f87ae4b7496c79573ec)](https://www.codacy.com/app/stefangotz/echronos-trello?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=echronos/echronos-trello&amp;utm_campaign=Badge_Grade)
+
 # Overview
 
 echronos-trello helps eChronos developers to stay on top task branches on review or in progress.
