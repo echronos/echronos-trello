@@ -1,4 +1,5 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/72880fd2c1dc4f87ae4b7496c79573ec)](https://www.codacy.com/app/stefangotz/echronos-trello?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=echronos/echronos-trello&amp;utm_campaign=Badge_Grade)
+[![Code Issues](https://www.quantifiedcode.com/api/v1/project/5b06ae32cd264bdea665df93d1723f51/badge.svg)](https://www.quantifiedcode.com/app/project/5b06ae32cd264bdea665df93d1723f51)
 
 # Overview
 
