@@ -212,20 +212,30 @@ class Task:
             merge_base = git.git(["merge-base", "origin/" + self.name, "origin/master"]).strip()
             stats_line = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)[-1].strip()
             stats = str(stats_line)
-            if " files changed" in stats:
+            if " file changed" in stats:
+                changed_files_str, stats = stats.split(" file changed")
+                changed_files = int(changed_files_str.strip())
+                stats = stats.strip(", ")
+            elif " files changed" in stats:
                 changed_files_str, stats = stats.split(" files changed")
                 changed_files = int(changed_files_str.strip())
                 stats = stats.strip(", ")
             else:
                 changed_files = 0
-            if " insertions" in stats:
+            if " insertions(" in stats:
                 insertions_str, stats = stats.split(" insertions(+)")
+                insertions = int(insertions_str.strip())
+                stats = stats.strip(", ")
+            elif " insertion(" in stats:
+                insertions_str, stats = stats.split(" insertion(+)")
                 insertions = int(insertions_str.strip())
                 stats = stats.strip(", ")
             else:
                 insertions = 0
-            if " deletions" in stats:
-                deletions = int(stats.split(" deletions")[0].strip())
+            if " deletions(" in stats:
+                deletions = int(stats.split(" deletions(")[0].strip())
+            elif " deletion(" in stats:
+                deletions = int(stats.split(" deletion(")[0].strip())
             else:
                 deletions = 0
 
