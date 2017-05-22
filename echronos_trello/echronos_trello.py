@@ -39,9 +39,13 @@ def update_trello(options):
     task_branch_names = [b for b in all_branch_names if "/" not in b and b not in ("master", "lca2016")]
     tasks = [Task(n) for n in task_branch_names]
 
-    high_complexity_threshold = sum(task.complexity for task in tasks) / len(tasks)
-    low_mid_complexity_tasks = [task for task in tasks if task.complexity < high_complexity_threshold]
-    medium_complexity_threshold = sum(task.complexity for task in low_mid_complexity_tasks) / len(low_mid_complexity_tasks)
+    if tasks:
+        high_complexity_threshold = sum(task.complexity for task in tasks if task.complexity) / len(tasks)
+        low_mid_complexity_tasks = [task for task in tasks if task.complexity and task.complexity < high_complexity_threshold]
+        if low_mid_complexity_tasks:
+            medium_complexity_threshold = sum(task.complexity for task in low_mid_complexity_tasks if task.complexity) / len(low_mid_complexity_tasks)
+        else:
+            medium_complexity_threshold = high_complexity_threshold / 2
 
     for task in tasks:
         lst = trello.lists[task.get_state()]
@@ -68,18 +72,23 @@ def update_trello(options):
 
 
 def _update_labels(trello, card, task, medium_complexity_threshold, high_complexity_threshold):
-    if task.complexity < medium_complexity_threshold:
-        color = "green"
-    elif task.complexity < high_complexity_threshold:
-        color = "yellow"
+    if task.complexity:
+        if task.complexity < medium_complexity_threshold:
+            color = "green"
+        elif task.complexity < high_complexity_threshold:
+            color = "yellow"
+        else:
+            color = "red"
+        if len(card.labels) > 1 or (len(card.labels) == 1 and card.labels[0].id != trello.labels[color].id):
+            for label in card.labels:
+                card.remove_label(label)
+            card.fetch()
+        if not card.labels:
+            card.add_label(trello.labels[color])
     else:
-        color = "red"
-    if len(card.labels) > 1 or (len(card.labels) == 1 and card.labels[0].id != trello.labels[color].id):
         for label in card.labels:
             card.remove_label(label)
         card.fetch()
-    if not card.labels:
-        card.add_label(trello.labels[color])
 
 
 class Task:
@@ -198,26 +207,31 @@ class Task:
         return self._complexity
 
     def _get_complexity(self):
-        paths = [name for name in os.listdir(".") if not name.startswith("external_tools") and not name.startswith("tools")]
-        merge_base = git.git(["merge-base", "origin/" + self.name, "origin/master"]).strip()
-        stats = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)[-1].strip()
-        if " files changed" in stats:
-            changed_files_str, stats = stats.split(" files changed")
-            changed_files = int(changed_files_str.strip())
-            stats = stats.strip(", ")
-        else:
-            changed_files = 0
-        if " insertions" in stats:
-            insertions_str, stats = stats.split(" insertions(+)")
-            insertions = int(insertions_str.strip())
-            stats = stats.strip(", ")
-        else:
-            insertions = 0
-        if " deletions" in stats:
-            deletions = int(stats.split(" deletions")[0].strip())
-        else:
-            deletions = 0
+        try:
+            paths = [name for name in os.listdir(".") if not name.startswith("external_tools") and not name.startswith("tools")]
+            merge_base = git.git(["merge-base", "origin/" + self.name, "origin/master"]).strip()
+            stats_line = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)[-1].strip()
+            stats = str(stats_line)
+            if " files changed" in stats:
+                changed_files_str, stats = stats.split(" files changed")
+                changed_files = int(changed_files_str.strip())
+                stats = stats.strip(", ")
+            else:
+                changed_files = 0
+            if " insertions" in stats:
+                insertions_str, stats = stats.split(" insertions(+)")
+                insertions = int(insertions_str.strip())
+                stats = stats.strip(", ")
+            else:
+                insertions = 0
+            if " deletions" in stats:
+                deletions = int(stats.split(" deletions")[0].strip())
+            else:
+                deletions = 0
 
-        modifications = insertions + deletions
+            modifications = insertions + deletions
 
-        return changed_files * 2 + modifications
+            return changed_files * 2 + modifications
+        except (ValueError, KeyError, IndexError) as err:
+            print("Exception '{}' occurred while attempting to parse '{}'".format(err, stats_line))
+            return 0
