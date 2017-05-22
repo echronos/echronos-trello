@@ -79,6 +79,7 @@ def _update_card(trello, task, medium_complexity_threshold, high_complexity_thre
 
 
 def _update_labels(trello, card, task, medium_complexity_threshold, high_complexity_threshold):
+    _delete_labels_on_card(card)
     if task.complexity:
         if task.complexity < medium_complexity_threshold:
             color = "green"
@@ -86,12 +87,7 @@ def _update_labels(trello, card, task, medium_complexity_threshold, high_complex
             color = "yellow"
         else:
             color = "red"
-        if len(card.labels) > 1 or (len(card.labels) == 1 and card.labels[0].id != trello.labels[color].id):
-            _delete_labels_on_card(card)
-        if not card.labels:
-            card.add_label(trello.labels[color])
-    else:
-        _delete_labels_on_card(card)
+        card.add_label(trello.labels[color])
 
 
 def _delete_labels_on_card(card):
