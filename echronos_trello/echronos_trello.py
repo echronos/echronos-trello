@@ -154,18 +154,7 @@ class Task:
 
         section_github = "# Github\n\n* [Branch on github](https://github.com/echronos/echronos/tree/{0})\n* [Diff on github](https://github.com/echronos/echronos/compare/{0})\n\n".format(self.name)
 
-        try:
-            task_file_contents = git.git(["show", "origin/{0}:pm/tasks/{0}".format(self.name)])
-            end_of_comment_index = task_file_contents.find("-->")
-            if end_of_comment_index == -1:
-                task_description = task_file_contents
-            else:
-                task_description = task_file_contents[end_of_comment_index+3:].lstrip()
-            section_task = task_description + "\n\n"
-        except subprocess.CalledProcessError:
-            section_task = ""
-
-        description = section_name + section_reviews + section_testing + section_github + section_task
+        description = section_name + section_reviews + section_testing + section_github + self._get_task_section()
         return description.strip()
 
     @property
@@ -184,6 +173,19 @@ class Task:
         merge_base = git.git(["merge-base", "origin/" + self.name, "origin/master"]).strip()
         revids = git.git(["log", "--pretty=format:%H", "{}..origin/{}".format(merge_base, self.name), "--", "pm/reviews/" + self.name], as_lines=True)
         return revids
+
+    def _get_task_section(self):
+        try:
+            task_file_contents = git.git(["show", "origin/{0}:pm/tasks/{0}".format(self.name)])
+            end_of_comment_index = task_file_contents.find("-->")
+            if end_of_comment_index == -1:
+                task_description = task_file_contents
+            else:
+                task_description = task_file_contents[end_of_comment_index+3:].lstrip()
+            section_task = task_description + "\n\n"
+        except subprocess.CalledProcessError:
+            section_task = ""
+        return section_task
 
     @property
     def complexity(self):
