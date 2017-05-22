@@ -23,14 +23,11 @@ date
 set -e
 set -u
 
-SSH_KEY_FILE="${1}"
-TRELLO_CREDENTIALS_FILE="${2}"
+TRELLO_CREDENTIALS_FILE="${1}"
 
-# load SSH key for accessing github
-eval $(ssh-agent)
-ssh-add "${SSH_KEY_FILE}"
+if [ ! -d x.py ]; then
+    echo "This script needs to be run from a local clone of https://github.com/echronos/echronos.git as the current working directory."
+    exit 1
+fi
 
-cd $HOME/rtos-clr/core
 python3 "$(dirname "${0}")"/run.py "${TRELLO_CREDENTIALS_FILE}"
-
-ssh-agent -k
