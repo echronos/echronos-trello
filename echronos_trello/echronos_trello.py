@@ -176,36 +176,9 @@ class Task:
         return self._reviews
 
     def _get_reviews(self):
-        author = None
-        conclusion = None
         authors_to_conclusions = {}
         for revid in reversed(self._get_revids_of_review_changes()):
-            output_lines = git.git(["show", revid], as_lines=True)
-            for line in output_lines:
-                line = line.strip()
-                if line.startswith("diff "):
-                    author = None
-                    conclusion = None
-                elif "Reviewer: " in line:
-                    author_and_email = line[10:].strip()
-                    author = author_and_email.split("(")[0].strip()
-                elif line.lower().startswith("+conclusion:"):
-                    if line.lower() == "+conclusion: accepted":
-                        conclusion = "Accepted"
-                    elif line.lower() == "+conclusion: rework":
-                        conclusion = "Rework"
-                    elif line.lower() == "+conclusion: accepted/rework":
-                        conclusion = "Open"
-                    else:
-                        print("Cannot handle conclusion '{}'".format(line))
-                if author and conclusion:
-                    if conclusion == "Open":
-                        prev = authors_to_conclusions.get(author, None)
-                        if prev == "Accepted":
-                            conclusion = "Accepted"
-                    authors_to_conclusions[author] = conclusion
-                    author = None
-                    conclusion = None
+            _update_review_conclusions_from_revid(authors_to_conclusions, revid)
         return authors_to_conclusions
 
     def _get_revids_of_review_changes(self):
@@ -248,3 +221,34 @@ class Task:
         except (ValueError, KeyError, IndexError) as err:
             print("Exception '{}' occurred while attempting to parse '{}'".format(err, stats_line))
             return 0
+
+
+def _update_review_conclusions_from_revid(authors_to_conclusions, revid):
+    author = None
+    conclusion = None
+    output_lines = git.git(["show", revid], as_lines=True)
+    for line in output_lines:
+        line = line.strip()
+        if line.startswith("diff "):
+            author = None
+            conclusion = None
+        elif "Reviewer: " in line:
+            author_and_email = line[10:].strip()
+            author = author_and_email.split("(")[0].strip()
+        elif line.lower().startswith("+conclusion:"):
+            if line.lower() == "+conclusion: accepted":
+                conclusion = "Accepted"
+            elif line.lower() == "+conclusion: rework":
+                conclusion = "Rework"
+            elif line.lower() == "+conclusion: accepted/rework":
+                conclusion = "Open"
+            else:
+                print("Cannot handle conclusion '{}'".format(line))
+        if author and conclusion:
+            if conclusion == "Open":
+                prev = authors_to_conclusions.get(author, None)
+                if prev == "Accepted":
+                    conclusion = "Accepted"
+            authors_to_conclusions[author] = conclusion
+            author = None
+            conclusion = None
