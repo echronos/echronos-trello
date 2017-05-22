@@ -40,12 +40,7 @@ def update_trello(options):
     tasks = [Task(n) for n in task_branch_names]
 
     if tasks:
-        high_complexity_threshold = sum(task.complexity for task in tasks if task.complexity) / len(tasks)
-        low_mid_complexity_tasks = [task for task in tasks if task.complexity and task.complexity < high_complexity_threshold]
-        if low_mid_complexity_tasks:
-            medium_complexity_threshold = sum(task.complexity for task in low_mid_complexity_tasks if task.complexity) / len(low_mid_complexity_tasks)
-        else:
-            medium_complexity_threshold = high_complexity_threshold / 2
+        medium_complexity_threshold, high_complexity_threshold = _get_complexity_thresholds(tasks)
 
     for task in tasks:
         _update_card(trello, task, medium_complexity_threshold, high_complexity_threshold)
@@ -53,6 +48,16 @@ def update_trello(options):
     _delete_obsolete_cards(trello.cards.values(), task_branch_names)
 
     return 0
+
+
+def _get_complexity_thresholds(tasks):
+    high_complexity_threshold = sum(task.complexity for task in tasks if task.complexity) / len(tasks)
+    low_mid_complexity_tasks = [task for task in tasks if task.complexity and task.complexity < high_complexity_threshold]
+    if low_mid_complexity_tasks:
+        medium_complexity_threshold = sum(task.complexity for task in low_mid_complexity_tasks if task.complexity) / len(low_mid_complexity_tasks)
+    else:
+        medium_complexity_threshold = high_complexity_threshold / 2
+    return medium_complexity_threshold, high_complexity_threshold
 
 
 def _update_card(trello, task, medium_complexity_threshold, high_complexity_threshold):
