@@ -87,15 +87,17 @@ def _update_labels(trello, card, task, medium_complexity_threshold, high_complex
         else:
             color = "red"
         if len(card.labels) > 1 or (len(card.labels) == 1 and card.labels[0].id != trello.labels[color].id):
-            for label in card.labels:
-                card.remove_label(label)
-            card.fetch()
+            _delete_labels_on_card(card)
         if not card.labels:
             card.add_label(trello.labels[color])
     else:
-        for label in card.labels:
-            card.remove_label(label)
-        card.fetch()
+        _delete_labels_on_card(card)
+
+
+def _delete_labels_on_card(card):
+    for label in card.labels:
+        card.remove_label(label)
+    card.fetch()
 
 
 def _delete_obsolete_cards(cards, task_branch_names):
