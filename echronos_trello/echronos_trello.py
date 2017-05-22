@@ -63,10 +63,7 @@ def update_trello(options):
                 card.set_description(task.description)
             _update_labels(trello, card, task, medium_complexity_threshold, high_complexity_threshold)
 
-    for card in trello.cards.values():
-        if card.name not in task_branch_names:
-            card.delete()
-            print("{}: deleted".format(card.name))
+    _delete_obsolete_cards(trello.cards.values(), task_branch_names)
 
     return 0
 
@@ -89,6 +86,13 @@ def _update_labels(trello, card, task, medium_complexity_threshold, high_complex
         for label in card.labels:
             card.remove_label(label)
         card.fetch()
+
+
+def _delete_obsolete_cards(cards, task_branch_names):
+    for card in cards:
+        if card.name not in task_branch_names:
+            card.delete()
+            print("{}: deleted".format(card.name))
 
 
 class Task:
