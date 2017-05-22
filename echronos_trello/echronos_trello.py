@@ -48,24 +48,28 @@ def update_trello(options):
             medium_complexity_threshold = high_complexity_threshold / 2
 
     for task in tasks:
-        lst = trello.lists[task.get_state()]
-        if task.name not in trello.cards:
-            card = lst.add_card(task.name, task.description)
-            trello.cards[task.name] = card
-            print("{}: created card".format(task.name))
-        else:
-            card = trello.cards[task.name]
-            if card.list_id != lst.id:
-                card.change_list(lst.id)
-                print("{}: moved to list '{}'".format(task.name, lst.name))
-            if card.description != task.description:
-                print("{}: updated description from '{}' to '{}'".format(task.name, card.description, task.description))
-                card.set_description(task.description)
-            _update_labels(trello, card, task, medium_complexity_threshold, high_complexity_threshold)
+        _update_card(trello, task, medium_complexity_threshold, high_complexity_threshold)
 
     _delete_obsolete_cards(trello.cards.values(), task_branch_names)
 
     return 0
+
+
+def _update_card(trello, task, medium_complexity_threshold, high_complexity_threshold):
+    lst = trello.lists[task.get_state()]
+    if task.name not in trello.cards:
+        card = lst.add_card(task.name, task.description)
+        trello.cards[task.name] = card
+        print("{}: created card".format(task.name))
+    else:
+        card = trello.cards[task.name]
+        if card.list_id != lst.id:
+            card.change_list(lst.id)
+            print("{}: moved to list '{}'".format(task.name, lst.name))
+        if card.description != task.description:
+            print("{}: updated description from '{}' to '{}'".format(task.name, card.description, task.description))
+            card.set_description(task.description)
+        _update_labels(trello, card, task, medium_complexity_threshold, high_complexity_threshold)
 
 
 def _update_labels(trello, card, task, medium_complexity_threshold, high_complexity_threshold):
