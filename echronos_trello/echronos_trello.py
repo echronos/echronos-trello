@@ -114,14 +114,16 @@ class Task:
 
     def get_state(self):
         if self.is_on_review:
-            if "Rework" in self.reviews.values():
-                return "Needs Rework"
-            accepts = len([c for c in self.reviews.values() if c == "Accepted"])
-            if accepts < 2:
-                return "Needs More Reviews"
-            return "Ready for Integration"
-        else:
-            return "In Progress"
+            return self._get_review_state()
+        return "In Progress"
+
+    def _get_review_state(self):
+        if "Rework" in self.reviews.values():
+            return "Needs Rework"
+        accepts = len([c for c in self.reviews.values() if c == "Accepted"])
+        if accepts < 2:
+            return "Needs More Reviews"
+        return "Ready for Integration"
 
     @property
     def is_on_review(self):
