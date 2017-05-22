@@ -18,6 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import re
 import subprocess
 
 from . import git
@@ -196,31 +197,36 @@ class Task:
         try:
             paths = [name for name in os.listdir(".") if not name.startswith("external_tools") and not name.startswith("tools")]
             merge_base = git.git(["merge-base", "origin/" + self.name, "origin/master"]).strip()
-            stats_line = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)[-1].strip()
-            stats = str(stats_line)
-            changed_files = 0
-            for token in (" file changed", " files changed"):
-                if token in stats:
-                    changed_files_str, stats = stats.split(token)
-                    changed_files = int(changed_files_str.strip())
-                    stats = stats.strip(", ")
-            insertions = 0
-            for token in (" insertions(", " insertion("):
-                if token in stats:
-                    insertions_str, stats = stats.split(token)
-                    insertions = int(insertions_str.strip())
-                    stats = stats.strip(", ")
-            deletions = 0
-            for token in (" deletions(", " deletion("):
-                if token in stats:
-                    deletions = int(stats.split(token)[0].strip())
+            stats = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)[-1].strip()
+
+            changed_files, insertions, deletions = _parse_stats(stats)
 
             modifications = insertions + deletions
 
             return changed_files * 2 + modifications
         except (ValueError, KeyError, IndexError) as err:
-            print("Exception '{}' occurred while attempting to parse '{}'".format(err, stats_line))
+            print("Exception '{}' occurred while attempting to parse '{}'".format(err, stats))
             return 0
+
+
+def _parse_stats(stats):
+    match = re.search(r"(\d+) file", stats)
+    if match:
+        changed_files = int(match.group(1))
+    else:
+        changed_files = 0
+    match = re.search(r"(\d+) insertion", stats)
+    if match:
+        insertions = int(match.group(1))
+    else:
+        insertions = 0
+    match = re.search(r"(\d+) deletion", stats)
+    if match:
+        deletions = int(match.group(1))
+    else:
+        deletions = 0
+
+    return changed_files, insertions, deletions
 
 
 def _update_review_conclusions_from_revid(authors_to_conclusions, revid):
