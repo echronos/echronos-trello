@@ -158,7 +158,7 @@ class Task:
         else:
             section_reviews = ""
 
-        section_testing = "# Testing\n\n* core repository on Linux: ![test status core Linux](https://travis-ci.org/echronos/echronos.svg?branch={0})\n* client repository on Linux: ![test status client Linux](https://travis-ci.org/echronos/test-client-repo.svg?branch={0})\n\n".format(self.name)
+        section_testing = "# Testing\n\n* core repository: ![](https://travis-ci.org/echronos/echronos.svg?branch={0}) [![](https://ci.appveyor.com/api/projects/status/u0l9tcx3r8x9fwj0/branch/{0}?svg=true)](https://ci.appveyor.com/project/stefangotz/echronos/branch/{0})\n* client repository: ![](https://travis-ci.org/echronos/test-client-repo.svg?branch={0}) [![](https://ci.appveyor.com/api/projects/status/wbyntsf0a5crcl62/branch/{0}?svg=true)](https://ci.appveyor.com/project/stefangotz/test-client-repo/branch/{0})\n\n".format(self.name)
 
         section_github = "# Github\n\n* [Branch on github](https://github.com/echronos/echronos/tree/{0})\n* [Diff on github](https://github.com/echronos/echronos/compare/{0})\n\n".format(self.name)
 
