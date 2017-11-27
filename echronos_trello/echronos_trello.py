@@ -205,7 +205,11 @@ class Task:
         try:
             paths = [name for name in os.listdir(".") if not name.startswith("external_tools") and not name.startswith("tools")]
             merge_base = git.git(["merge-base", "origin/" + self.name, "origin/master"]).strip()
-            stats = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)[-1].strip()
+            diff = git.git(["diff", "--stat", "--diff-filter=MA", "-M", "{}..origin/{}".format(merge_base, self.name)] + paths, as_lines=True)
+            if not diff:
+                return 0
+
+            stats = diff[-1].strip()
 
             changed_files, insertions, deletions = _parse_stats(stats)
 
